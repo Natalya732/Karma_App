@@ -2,15 +2,12 @@ import { createContext, useContext, useMemo } from "react";
 import { useIndexedDB, type useIndexedResult } from "../hooks/useIndexedDB";
 import { Database } from "../utils/constants";
 
-const DBContext = createContext<useIndexedResult | null>(null);
+const DBContext = createContext<useIndexedResult>({} as useIndexedResult);
 
 export function DBProvider({ children }: { children: React.ReactNode }) {
- const tables = useMemo(() => [
-  Database.boardTable,
-  Database.taskTable
-], []);
+  const tables = useMemo(() => [Database.boardTable, Database.taskTable], []);
 
-const db = useIndexedDB(Database.name, tables);
+  const db = useIndexedDB(Database.name, tables);
 
   return <DBContext.Provider value={db}>{children}</DBContext.Provider>;
 }

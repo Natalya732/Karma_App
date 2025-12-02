@@ -28,11 +28,11 @@ import { ChevronDownIcon, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
-import { useIndexedDB } from "@/shared/hooks/useIndexedDB";
 import { Database } from "@/shared/utils/constants";
 import { toast } from "sonner";
+import { useDb } from "@/shared/context/dbProvider";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   title: z.string().min(2, {
     message: "Title must be at least 2 characters.",
   }),
@@ -57,10 +57,7 @@ const formSchema = z.object({
 
 export function TaskForm({ onHide }: { onHide: () => void }) {
   const [open, setOpen] = useState(false);
-  const { getAllValue, isDbConnecting } = useIndexedDB(Database.name, [
-    Database.boardTable,
-  ]);
-  const { putValue } = useIndexedDB(Database.name, [Database.taskTable]);
+  const { getAllValue, isDbConnecting, putValue } = useDb();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,15 +69,15 @@ export function TaskForm({ onHide }: { onHide: () => void }) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    putValue(Database.taskTable, values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await putValue(Database.taskTable, values);
     toast.success("Task is created successfully");
     onHide();
   }
 
-  function getBoardsValue() {
-    const allBoards = getAllValue(Database.boardTable);
-    allBoards.then((board) => {
+  async function getBoardsValue() {
+    const allBoards = await getAllValue(Database.boardTable);
+    allBoards.map((board) => {
       form.setValue("boards", board);
     });
   }
@@ -137,14 +134,15 @@ export function TaskForm({ onHide }: { onHide: () => void }) {
                         <SelectValue placeholder="Select Board" />
                       </SelectTrigger>
                       <SelectContent>
-                        {field.value?.map((item) => (
-                          <SelectItem
-                            className="cursor-pointer"
-                            value={item.boardName}
-                          >
-                            {item.boardName}
-                          </SelectItem>
-                        ))}
+                        {Array.isArray(field.value) &&
+                          field.value?.map((item) => (
+                            <SelectItem
+                              className="cursor-pointer"
+                              value={item.boardName}
+                            >
+                              {item.boardName}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </FormControl>
