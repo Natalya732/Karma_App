@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Database } from "@/shared/utils/constants";
 
-interface useIndexedResult {
+export interface useIndexedResult {
   getTableValue: (tableName: string, id: number) => Promise<any>;
   getAllValue: (tableName: string) => Promise<any[]>;
   putValue: (tableName: string, value: object) => Promise<IDBValidKey | null>;
@@ -20,16 +20,20 @@ export const useIndexedDB = (
   databaseName: string,
   tableNames: string[]
 ): useIndexedResult => {
-  const [db, setDb] = useState<IDBDatabase | null>();
+  const [db, setDb] = useState<IDBDatabase | null>(null);
   const [isDbConnecting, setIsDbConnecting] = useState<boolean>(true);
 
   useEffect(() => {
     const initDB = () => {
       const request = indexedDB.open(databaseName, Database.version);
-
       request.onupgradeneeded = () => {
         const database = request.result;
-        tableNames.forEach((tableName) => {
+
+        database.onversionchange = () => {
+          database.close();
+        };
+
+        [Database.boardTable, Database.taskTable].forEach((tableName) => {
           if (!database.objectStoreNames.contains(tableName)) {
             database.createObjectStore(tableName, {
               autoIncrement: true,
@@ -38,8 +42,11 @@ export const useIndexedDB = (
           }
         });
       };
-
       request.onsuccess = () => {
+        console.log("request succs", request.result);
+        request.result.onversionchange = () => {
+          request.result.close();
+        };
         setDb(request.result);
         setIsDbConnecting(false);
       };
@@ -55,7 +62,7 @@ export const useIndexedDB = (
     }
   }, []);
 
-  //   Get transaction   for a specific table
+  //   Get transaction for a specific table
   const getTableTransaction = (tableName: string, mode: IDBTransactionMode) => {
     if (!db) throw new Error("Database is not initialized");
     return db.transaction(tableName, mode).objectStore(tableName);
@@ -78,8 +85,7 @@ export const useIndexedDB = (
     [db]
   );
 
-  //   Function to get all values from a specific table
-
+  // Function to get all values from a specific table
   const getAllValue = useCallback(
     (tableName: string): Promise<any> => {
       return new Promise((resolve, reject) => {

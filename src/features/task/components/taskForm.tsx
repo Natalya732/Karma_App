@@ -16,11 +16,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { ChevronDownIcon, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { useIndexedDB } from "@/shared/hooks/useIndexedDB";
+import { Database } from "@/shared/utils/constants";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -28,6 +38,13 @@ const formSchema = z.object({
   }),
   description: z.string(),
   dueDate: z.date(),
+  boards: z.array(
+    z.object({
+      id: z.number(),
+      boardName: z.string(),
+      boardDescription: z.string(),
+    })
+  ),
   notes: z
     .array(
       z.object({
@@ -38,21 +55,41 @@ const formSchema = z.object({
     .optional(),
 });
 
-export function TaskForm() {
+export function TaskForm({ onHide }: { onHide: () => void }) {
   const [open, setOpen] = useState(false);
+  const { getAllValue, isDbConnecting } = useIndexedDB(Database.name, [
+    Database.boardTable,
+  ]);
+  const { putValue } = useIndexedDB(Database.name, [Database.taskTable]);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
+      boards: [],
       dueDate: new Date(),
       notes: [],
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    putValue(Database.taskTable, values);
+    toast.success("Task is created successfully");
+    onHide();
   }
+
+  function getBoardsValue() {
+    const allBoards = getAllValue(Database.boardTable);
+    allBoards.then((board) => {
+      form.setValue("boards", board);
+    });
+  }
+
+  useEffect(() => {
+    if (!isDbConnecting) {
+      getBoardsValue();
+    }
+  }, [isDbConnecting]);
 
   return (
     <Form {...form}>
@@ -86,54 +123,85 @@ export function TaskForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="dueDate"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl>
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild className="w-full">
-                      <Button
-                        variant="outline"
-                        id="date"
-                        className="justify-between font-normal"
+        <div className="flex gap-3">
+          <FormField
+            control={form.control}
+            name="boards"
+            render={({ field }) => {
+              return (
+                <FormItem className="flex-1">
+                  <FormLabel>Select Board</FormLabel>
+                  <FormControl>
+                    <Select>
+                      <SelectTrigger className="w-full cursor-pointer">
+                        <SelectValue placeholder="Select Board" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.value?.map((item) => (
+                          <SelectItem
+                            className="cursor-pointer"
+                            value={item.boardName}
+                          >
+                            {item.boardName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            control={form.control}
+            name="dueDate"
+            render={({ field }) => {
+              return (
+                <FormItem className="flex-1">
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild className="w-full">
+                        <Button
+                          variant="outline"
+                          id="date"
+                          className="justify-between font-normal"
+                        >
+                          {field.value
+                            ? format(field.value, "PPP")
+                            : "Select date"}
+                          <ChevronDownIcon />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-full overflow-hidden p-0"
+                        align="start"
                       >
-                        {field.value
-                          ? format(field.value, "PPP")
-                          : "Select date"}
-                        <ChevronDownIcon />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-full overflow-hidden p-0"
-                      align="start"
-                    >
-                      <Calendar
-                        className="w-full"
-                        mode="single"
-                        selected={field.value || new Date()}
-                        captionLayout="dropdown"
-                        onSelect={(date) => {
-                          field.onChange(date);
-                          setOpen(false);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
+                        <Calendar
+                          className="w-full"
+                          mode="single"
+                          selected={field.value || new Date()}
+                          captionLayout="dropdown"
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setOpen(false);
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+        </div>
         <FormField
           control={form.control}
           name="notes"
           render={({ field }) => {
-            console.log("field", field);
+            console.log("fields", field.value);
             return (
               <FormItem>
                 <FormLabel>Notes</FormLabel>
@@ -175,25 +243,27 @@ export function TaskForm() {
                       ...(field.value || [
                         {
                           note: "",
-                          id: "",
+                          id: new Date(),
                         },
                       ]),
-                      "",
+                      {
+                        note: "",
+                        id: new Date(),
+                      },
                     ])
                   }
                 >
                   + Add Note
                 </Button>
-
                 <FormMessage />
               </FormItem>
             );
           }}
         />
+        <Button type="submit" className="mt-4">
+          Submit
+        </Button>
       </form>
-      <Button type="submit" className="mt-4">
-        Submit
-      </Button>
     </Form>
   );
 }

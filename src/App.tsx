@@ -1,12 +1,14 @@
-import React, { useState } from "react";
-import TaskDialog from "@/features/task/entry/TaskDialog";
+import { useState } from "react";
+import TaskDialog from "@/features/task/entry/taskDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import BoardDialog from "@/features/board/entry/BoardDialog";
+import BoardDialog from "@/features/board/entry/boardDialog";
+import { DBProvider } from "./shared/context/dbProvider";
 
-export default function App() {
+function App() {
   const [showDialog, setShowDialog] = useState(true);
   const [showBoardDialog, setShowBoardDialog] = useState(false);
+  
   return (
     <>
       <div className="bg-gray-50 p-10 flex flex-col gap-2 h-screen w-screen text-zinc-400">
@@ -39,5 +41,13 @@ export default function App() {
         <BoardDialog edit={false} onHide={() => setShowBoardDialog(false)} />
       )}
     </>
+  );
+}
+
+export default function AppWrapped() {
+  return (
+    <DBProvider>
+      <App />
+    </DBProvider>
   );
 }

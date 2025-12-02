@@ -1,7 +1,6 @@
 import React from "react";
 import { XCircle } from "lucide-react";
-import BoardForm from "@/features/board/components/BoardForm";
-
+import BoardForm from "@/features/board/components/boardForm";
 export default function BoardDialog({
   onHide,
   edit = false,
@@ -23,7 +22,7 @@ export default function BoardDialog({
         </div>
 
         <div className="dialogForm mt-6">
-          <BoardForm />
+          <BoardForm onHide={onHide} />
         </div>
       </div>
     </div>

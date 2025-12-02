@@ -1,5 +1,4 @@
 import { XCircle } from "lucide-react";
-import React from "react";
 import { TaskForm } from "../components/taskForm";
 
 export default function TaskDialog({
@@ -23,7 +22,7 @@ export default function TaskDialog({
         </div>
 
         <div className="dialogForm mt-6">
-          <TaskForm />
+          <TaskForm onHide={onHide}/>
         </div>
       </div>
     </div>
