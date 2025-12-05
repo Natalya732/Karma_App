@@ -43,7 +43,6 @@ export const useIndexedDB = (
         });
       };
       request.onsuccess = () => {
-        console.log("request succs", request.result);
         request.result.onversionchange = () => {
           request.result.close();
         };

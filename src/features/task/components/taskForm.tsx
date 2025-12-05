@@ -45,6 +45,9 @@ export const formSchema = z.object({
       boardDescription: z.string(),
     })
   ),
+  selectedBoardId: z.string().min(1, {
+    message: "Please select a board.",
+  }),
   notes: z
     .array(
       z.object({
@@ -66,6 +69,7 @@ export function TaskForm({ onHide }: { onHide: () => void }) {
       boards: [],
       dueDate: new Date(),
       notes: [],
+      selectedBoardId: "",
     },
   });
 
@@ -77,9 +81,7 @@ export function TaskForm({ onHide }: { onHide: () => void }) {
 
   async function getBoardsValue() {
     const allBoards = await getAllValue(Database.boardTable);
-    allBoards.map((board) => {
-      form.setValue("boards", board);
-    });
+    form.setValue("boards", allBoards);
   }
 
   useEffect(() => {
@@ -123,22 +125,25 @@ export function TaskForm({ onHide }: { onHide: () => void }) {
         <div className="flex gap-3">
           <FormField
             control={form.control}
-            name="boards"
+            name="selectedBoardId"
             render={({ field }) => {
+              const boardOptions = form.watch("boards");
+
               return (
                 <FormItem className="flex-1">
                   <FormLabel>Select Board</FormLabel>
                   <FormControl>
-                    <Select>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger className="w-full cursor-pointer">
                         <SelectValue placeholder="Select Board" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.isArray(field.value) &&
-                          field.value?.map((item) => (
+                        {Array.isArray(boardOptions) &&
+                          boardOptions.map((item) => (
                             <SelectItem
+                              key={item.id}
                               className="cursor-pointer"
-                              value={item.boardName}
+                              value={String(item.id)}
                             >
                               {item.boardName}
                             </SelectItem>
@@ -199,7 +204,6 @@ export function TaskForm({ onHide }: { onHide: () => void }) {
           control={form.control}
           name="notes"
           render={({ field }) => {
-            console.log("fields", field.value);
             return (
               <FormItem>
                 <FormLabel>Notes</FormLabel>
