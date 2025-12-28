@@ -6,7 +6,6 @@ import {
   Clock,
   ChevronDown,
   Calendar,
-  Sparkles,
 } from "lucide-react";
 import type { TaskData } from "@/features/task/views/taskView";
 import { capitalizeString } from "@/lib/utils";
