@@ -11,14 +11,14 @@ export interface useIndexedResult {
     id: number;
     newItem: any;
   }) => void;
-  deleteValue: (tableName: string, id: number) => number | null;
+  deleteValue: (tableName: string, id: number) => number | undefined;
   deleteAll: (tableName: string) => void;
   isDbConnecting: boolean;
 }
 
 export const useIndexedDB = (
   databaseName: string,
-  tableNames: string[]
+  // tableNames: string[]
 ): useIndexedResult => {
   const [db, setDb] = useState<IDBDatabase | null>(null);
   const [isDbConnecting, setIsDbConnecting] = useState<boolean>(true);
@@ -131,7 +131,7 @@ export const useIndexedDB = (
       try {
         const store = getTableTransaction(tableName, "readwrite");
         values.forEach((value) => store.put(value));
-        return getAllValue(tableName);
+        resolve(getAllValue(tableName));
       } catch (err) {
         console.log("error", err);
         reject(err);
@@ -163,7 +163,7 @@ export const useIndexedDB = (
     }
   };
 
-  const deleteValue = (tableName: string, id: number): number | null => {
+  const deleteValue = (tableName: string, id: number): number | undefined => {
     try {
       const store = getTableTransaction(tableName, "readwrite");
       store.delete(id);

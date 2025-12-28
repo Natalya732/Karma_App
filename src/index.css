@@ -4,6 +4,20 @@
 * {
   font-family: "Space Grotesk", sans-serif;
   font-optical-sizing: auto;
+  font-size: 12px;
+}
+
+html,
+body {
+  width: 620px;
+  height: 520px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.app {
+  width: 100%;
+  height: 520px;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -126,8 +140,8 @@
 
 .dialogOverlay {
   background: rgba(0, 0, 0, 0.533);
-  height: 100vh;
-  width: 100%;
+  height: 520px;
+  width: 620px;
   position: fixed;
   top: 0;
   left: 0;
@@ -139,18 +153,42 @@
 
 /* For Chrome, Edge, Safari */
 .cardBody::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .cardBody::-webkit-scrollbar-track {
-  background: #e5e7eb; /* gray-200 */
+  background: transparent;
   border-radius: 10px;
 }
 
 .cardBody::-webkit-scrollbar-thumb {
-  background: #9ca3af; /* gray-400 */
+  background: rgba(148, 163, 184, 0.3); /* slate-400/30 */
   border-radius: 10px;
   cursor: pointer;
+}
+
+.cardBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5); /* slate-400/50 */
+}
+
+/* Dark theme overrides for dialogs */
+.dialogOverlay .rdp {
+  --rdp-accent-color: rgb(99, 102, 241);
+  --rdp-background-color: rgb(51, 65, 85);
+}
+
+.dialogOverlay .rdp-day_selected {
+  background-color: rgb(99, 102, 241) !important;
+}
+
+.dialogOverlay .rdp-button:hover:not([disabled]) {
+  background-color: rgb(51, 65, 85);
+}
+
+.dialogOverlay select {
+  background-color: rgb(30, 41, 59);
+  border-color: rgb(51, 65, 85);
+  color: white;
 }
 
 input[type="checkbox"].peer:checked::before {
@@ -163,7 +201,7 @@ input[type="checkbox"].peer:checked::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white; 
+  color: white;
   font-size: 11px;
   line-height: 1;
 }

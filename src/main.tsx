@@ -4,8 +4,14 @@ import App from "./App.tsx";
 import { Toaster } from "sonner";
 
 createRoot(document.getElementById("root")!).render(
-  <>
-    <Toaster />
+  <div id="main" className="app">
+    <Toaster
+    position="top-right" 
+    duration={2000}
+    richColors
+    theme="dark"
+    closeButton
+    />
     <App />
-  </>
+  </div>
 );
